@@ -5,7 +5,7 @@ import { APP_CONFIG, ROUTES } from "../utils/constants";
 import { Video } from "lucide-react";
 
 const Header = () => {
-  const { isAuthenticated, user, logout } = useAuth;
+  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -23,7 +23,7 @@ const Header = () => {
               className="flex items-center space-x-3"
             >
               <div className="w-10 h-10 bg-linear-to-br from-blue-400 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Video />
+                <Video color="white"/>
               </div>
               <h1 className="text-xl font-bold bg-linear-to-r from-blue-400 to-indigo-600 bg-clip-text text-transparent">
                 {APP_CONFIG.APP_NAME}
@@ -70,7 +70,7 @@ const Header = () => {
 
                   <Link
                     to={ROUTES.REGISTER}
-                    className="px-4 py-2 txt-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus: ring-offset-2 focus:ring-red-500 transition-colors shadow-sm rounded-2xl"
+                    className="px-4 py-2 txt-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus: ring-offset-2 focus:ring-red-500 transition-colors shadow-sm"
                   >
                     Sign Up
                   </Link>

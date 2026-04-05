@@ -77,7 +77,7 @@ export const APP_CONFIG = {
   // Features Data (for Home and Dashboard)
   FEATURES: [
     {
-      icon: "FaVideo",
+      icon: "Video",
       title: "HD Video Quality",
       description:
         "Crystal clear video calls with multiple participants in high definition",
@@ -85,7 +85,7 @@ export const APP_CONFIG = {
       color: "blue",
     },
     {
-      icon: "FaComments",
+      icon: "Comments",
       title: "Built-in Chat",
       description:
         "Real-time messaging during your sessions for seamless communication",
@@ -93,7 +93,7 @@ export const APP_CONFIG = {
       color: "green",
     },
     {
-      icon: "FaShieldAlt",
+      icon: "ShieldAlt",
       title: "Secure & Private",
       description:
         "End-to-end encryption for all your sessions and data protection",
@@ -101,7 +101,7 @@ export const APP_CONFIG = {
       color: "purple",
     },
     {
-      icon: "FaUsers",
+      icon: "Users",
       title: "Easy Collaboration",
       description:
         "Invite participants with a simple room ID and start collaborating instantly",
