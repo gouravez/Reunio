@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import api from "../services/api";
 import { API_ENDPOINTS } from "../utils/constants";
+import Auth from "../pages/Auth";
 
+const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -61,20 +63,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-    const logout = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        await api.post(API_ENDPOINTS.LOGOUT);
-        setUser(null);
-        return { success: true };
-      } catch (error) {
-        setError(error.message.data.message || "Logout failed");
-        return { success: false, error: errorMessage };
-      } finally {
-        setLoading(false);
-      }
-    };
+  const logout = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await api.post(API_ENDPOINTS.LOGOUT);
+      setUser(null);
+      return { success: true };
+    } catch (error) {
+      setError(error.message.data.message || "Logout failed");
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AuthContext.Provider
@@ -93,3 +95,11 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+};
+
+export default AuthContext;
