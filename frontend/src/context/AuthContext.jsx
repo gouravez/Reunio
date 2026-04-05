@@ -61,24 +61,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-//   const logout = async () => {
-//     try {
-//       setLoading(true);
-//       setError(null);
-//       await api.post(API_ENDPOINTS.LOGOUT);
-//       setUser(null);
-//       return { success: true };
-//     } catch (error) {
-//       setError(error.message.data.message || "Logout failed");
-//       return { success: false, error: errorMessage };
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+    const logout = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        await api.post(API_ENDPOINTS.LOGOUT);
+        setUser(null);
+        return { success: true };
+      } catch (error) {
+        setError(error.message.data.message || "Logout failed");
+        return { success: false, error: errorMessage };
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, error, register, login, logout }}
+      value={{
+        user,
+        loading,
+        error,
+        setError,
+        register,
+        login,
+        logout,
+        isAuthenticated: !!user,
+      }}
     >
       {children}
     </AuthContext.Provider>

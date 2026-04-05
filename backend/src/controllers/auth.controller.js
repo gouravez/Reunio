@@ -92,4 +92,17 @@ async function getCurrentUser(req, res, next) {
     next(error);
   }
 }
-module.exports = { registerUser, loginUser, getCurrentUser };
+
+function logoutUser(req, res, next) {
+  try {
+    res.clearCookie("token");
+    return res.status(200).json({
+      success: true,
+      message: "User logged out successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { registerUser, loginUser, getCurrentUser, logoutUser };

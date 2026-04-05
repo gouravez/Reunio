@@ -53,4 +53,11 @@ router.get(
   authController.getCurrentUser,
 );
 
+
+// POST /api/auth/logout
+router.post(
+  "/logout",
+  authController.logoutUser,
+);
+
 module.exports = router;
