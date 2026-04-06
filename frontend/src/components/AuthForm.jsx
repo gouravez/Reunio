@@ -1,12 +1,22 @@
-import { UserPlus, Video } from "lucide-react";
+import {
+  User,
+  UserPlus,
+  Video,
+  CircleAlert,
+  Mail,
+  Lock,
+  LockKeyhole,
+  Loader,
+} from "lucide-react";
 import React from "react";
-import { APP_CONFIG } from "../utils/constants";
+import { APP_CONFIG, ROUTES } from "../utils/constants";
+import { Link } from "react-router-dom";
 
 const AuthForm = ({
   mode,
   formData,
   onChange,
-  onsubmit,
+  onSubmit,
   loading,
   error,
   localError,
@@ -33,6 +43,187 @@ const AuthForm = ({
           </h1>
 
           <p>{isLogin ? APP_CONFIG.APP_TAGLINE : `Start your journey today`}</p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-xl p-8 border-gray-100">
+          <div className="mb-6 ">
+            <h2 className="text-2xl font-bold text-gray-900 text-center">
+              {isLogin
+                ? APP_CONFIG.AUTH_CONTENT.LOGIN.HEADING
+                : APP_CONFIG.AUTH_CONTENT.REGISTER.HEADING}
+            </h2>
+
+            <p className="mt-2 text-center text-sm text-gray-600">
+              {isLogin
+                ? APP_CONFIG.AUTH_CONTENT.LOGIN.DESCRIPTION
+                : APP_CONFIG.AUTH_CONTENT.REGISTER.DESCRIPTION}
+            </p>
+          </div>
+
+          <form
+            className={isLogin ? "space-y-5" : "space-y-4"}
+            onSubmit={onSubmit}
+          >
+            {(error || localError) && (
+              <div className="bg-red 50 border border-red-500 text-red-700 p-4 rounded-lg flex items-start ">
+                <CircleAlert className="w-5 h-5 mr-2 mt-0.5" />
+                <span className="text-sm">{error || localError}</span>
+              </div>
+            )}
+
+            {!isLogin && (
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Full Name
+                </label>
+
+                <div className="relative ">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    required
+                    value={formData.name || ""}
+                    onChange={onChange}
+                    className="block w-full pl-10 pr-3 py-3 border-gray-300 rounded-lg focus:ring;2 focus:ring-purple-500 focus-border-purple-500 transition-colors "
+                    placeholder="John Doe"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Email Address
+              </label>
+
+              <div className="relative ">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={formData.email || ""}
+                  onChange={onChange}
+                  className={`block w-full pl-10 pr-3 py-3 border-gray-300 rounded-lg focus:ring;2 transition-colors ${isLogin ? " focus:ring-purple-500 focus-border-purple-500" : " focus:ring-blue-500 focus-border-blue-500"}`}
+                  placeholder="you@example.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Password
+              </label>
+
+              <div className="relative ">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete={isLogin ? "current-password" : "new-password"}
+                  required
+                  value={formData.password || ""}
+                  onChange={onChange}
+                  className={`block w-full pl-10 pr-3 py-3 border-gray-300 rounded-lg focus:ring;2 transition-colors ${isLogin ? " focus:ring-purple-500 focus-border-purple-500" : " focus:ring-blue-500 focus-border-blue-500"}`}
+                  placeholder={
+                    isLogin ? "Enter your password" : "Minimum 6 characters"
+                  }
+                />
+              </div>
+            </div>
+
+            {!isLogin && (
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Confirm Password
+                </label>
+
+                <div className="relative ">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <LockKeyhole className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete={isLogin ? "current-password" : "new-password"}
+                    required
+                    value={formData.password || ""}
+                    onChange={onChange}
+                    className={`block w-full pl-10 pr-3 py-3 border-gray-300 rounded-lg focus:ring;2 transition-colors ${isLogin ? " focus:ring-purple-500 focus-border-purple-500" : " focus:ring-blue-500 focus-border-blue-500"}`}
+                    placeholder={"Re-enter your password"}
+                  />
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 cursor-not-allowed transition-all transform hover:scale-[1.02] ${isLogin ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:ring-blue-500 " : "bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:ring-purple-500 mt-6"}`}
+            >
+              {loading ? (
+                <>
+                  <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                  {isLogin ? "Signing..." : "Creating Account..."}
+                </>
+              ) : isLogin ? (
+                "Sign In"
+              ) : (
+                "Create Account"
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center ">
+            <p className="text-sm text-gray-600">
+              {isLogin ? (
+                <>
+                  Don't have an account{" "}
+                  <Link
+                    to={ROUTES.REGISTER}
+                    className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  >
+                    Create one now
+                  </Link>
+                </>
+              ) : (
+                <>
+                  Already have an account{" "}
+                  <Link
+                    to={ROUTES.LOGIN}
+                    className="font-medium text-purple-600 hover:text-purple-500 transition-colors"
+                  >
+                    Sign in here
+                  </Link>
+                </>
+              )}
+            </p>
+          </div>
         </div>
       </div>
     </div>
