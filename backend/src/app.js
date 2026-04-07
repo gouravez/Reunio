@@ -12,6 +12,7 @@ const corsOptions = {
 const { errorHandler } = require("./middlewares/errorHandler.middleware");
 const healthRouter = require("./routes/health.route");
 const authRouter = require("./routes/auth.route");
+const sessionRouter = require("./routes/session.route");
 
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -20,6 +21,7 @@ app.use(cookieParser());
 
 app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/session", sessionRouter);
 app.use(errorHandler);
 
 module.exports = app;
