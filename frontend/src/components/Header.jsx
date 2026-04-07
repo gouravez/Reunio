@@ -18,12 +18,9 @@ const Header = () => {
       <header className="fixed top-0 left-0 right-0 bg-white z-50 shadow-sm border-b border-gray-200">
         <div className="mx-12 px-4 sm:px-6 lg_px-8">
           <div className="flex justify-between items-center h-16">
-            <Link
-              to={isAuthenticated ? ROUTES.DASHBOARD : ROUTES.HOME}
-              className="flex items-center space-x-3"
-            >
+            <Link to={ROUTES.HOME} className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-linear-to-br from-blue-400 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Video color="white"/>
+                <Video color="white" />
               </div>
               <h1 className="text-xl font-bold bg-linear-to-r from-blue-400 to-indigo-600 bg-clip-text text-transparent">
                 {APP_CONFIG.APP_NAME}
