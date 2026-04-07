@@ -3,7 +3,7 @@ import { Loader } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { ROUTES } from "../utils/constants";
 
-function ProtectedRoute({ children }) {
+const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -18,7 +18,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={ROUTES.HOME} />;
+    return <Navigate to={ROUTES.LOGIN} />;
   }
 
   return children;

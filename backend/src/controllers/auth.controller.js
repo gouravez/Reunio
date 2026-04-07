@@ -12,7 +12,7 @@ async function registerUser(req, res, next) {
         .json({ success: false, message: "User already exists" });
     }
 
-    console.log("Registering user:", req.body); // Debug log
+    // console.log("Registering user:", req.body); 
     const encryptedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       name,

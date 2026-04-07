@@ -8,7 +8,7 @@ const Auth = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const mode = (location.pathname === ROUTES.REGISTER ? "register" : "login");
+  const mode = location.pathname === ROUTES.REGISTER ? "register" : "login";
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -17,7 +17,7 @@ const Auth = () => {
   });
 
   const [localError, setLocalError] = useState("");
-  const {login, register, loading, error, isAuthenticated} = useAuth();
+  const { login, register, loading, error, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -26,7 +26,7 @@ const Auth = () => {
   }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: [e.target.value] });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
     setLocalError("");
   };
 
@@ -42,30 +42,30 @@ const Auth = () => {
       const result = await login(formData.email, formData.password);
       if (result.success) {
         navigate(ROUTES.DASHBOARD);
-      } else {
-        if (!formData.name || !formData.email || !formData.password) {
-          setLocalError("One or more fields is missing");
-          return;
-        }
+      }
+    } else {
+      if (!formData.name || !formData.email || !formData.password) {
+        setLocalError("One or more fields is missing");
+        return;
+      }
 
-        if (formData.password.length < 6) {
-          setLocalError("Password must be atleast 6 characters");
-          return;
-        }
+      if (formData.password.length < 6) {
+        setLocalError("Password must be atleast 6 characters");
+        return;
+      }
 
-        if (formData.password !== formData.confirmPassword) {
-          setLocalError("Password do not match");
-          return;
-        }
+      if (formData.password !== formData.confirmPassword) {
+        setLocalError("Password do not match");
+        return;
+      }
 
-        const result = await register(
-          formData.name,
-          formData.email,
-          formData.password,
-        );
-        if (result.success) {
-          navigate(ROUTES.DASHBOARD);
-        }
+      const result = await register(
+        formData.name,
+        formData.email,
+        formData.password
+      );
+      if (result.success) {
+        navigate(ROUTES.DASHBOARD);
       }
     }
   };
@@ -75,7 +75,7 @@ const Auth = () => {
       mode={mode}
       formData={formData}
       onChange={handleChange}
-      onsubmit={handleSubmit}
+      onSubmit={handleSubmit}
       loading={loading}
       error={error}
       localError={localError}

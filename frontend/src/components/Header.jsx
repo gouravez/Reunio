@@ -40,8 +40,8 @@ const Header = () => {
                     Dashboard
                   </Link>
 
-                  <div className="flex items-center space-x-2 bg-gray-50 rounded-lg">
-                    <div className="w-8 h-8 bg-linear-to-r from-blue-300 to-indigo-500 flex items-center">
+                  <div className="flex items-center space-x-2 bg-gray-50 ">
+                    <div className="w-8 h-8 bg-linear-to-r from-blue-300 to-indigo-500 flex items-center justify-center rounded-2xl">
                       <span className="text-white text-sm font-semibold">
                         {user?.name?.charAt(0).toUpperCase()}
                       </span>

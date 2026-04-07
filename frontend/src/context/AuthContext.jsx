@@ -13,10 +13,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await api.get(API_ENDPOINTS.CHECK_AUTH);
+        const response = await api.get(API_ENDPOINTS.AUTH.ME);
         setUser(response.data.user);
       } catch (error) {
-        setError(error.message);
+        // setError(error.message);
         setUser(null);
       } finally {
         setLoading(false);
@@ -30,34 +30,49 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.post(API_ENDPOINTS.REGISTER, {
+
+      const response = await api.post(API_ENDPOINTS.AUTH.REGISTER, {
         name,
         email,
         password,
       });
-      setUser(response.data.user);
-      return { success: true, user };
+
+      const userData = response.data.user;
+
+      setUser(userData);
+
+      return { success: true, user: userData };
     } catch (error) {
-      setError(error.message.data.message || "Registration failed");
-      return { success: false, error: errorMessage };
+      console.log("REGISTER ERROR:", error.response || error);
+      const message = error.response?.data?.message || "Registration failed";
+
+      setError(message);
+
+      return { success: false, error: message };
     } finally {
       setLoading(false);
     }
   };
-
   const login = async (email, password) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.post(API_ENDPOINTS.LOGIN, {
+
+      const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, {
         email,
         password,
       });
-      setUser(response.data.user);
-      return { success: true, user };
+
+      const userData = response.data.user;
+      setUser(userData);
+
+      return { success: true, user: userData };
     } catch (error) {
-      setError(error.message.data.message || "Registration failed");
-      return { success: false, error: errorMessage };
+      const message = error.response?.data?.message || "Login failed";
+
+      setError(message);
+
+      return { success: false, error: message };
     } finally {
       setLoading(false);
     }
@@ -67,7 +82,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      await api.post(API_ENDPOINTS.LOGOUT);
+      await api.post(API_ENDPOINTS.AUTH.LOGOUT);
       setUser(null);
       return { success: true };
     } catch (error) {
