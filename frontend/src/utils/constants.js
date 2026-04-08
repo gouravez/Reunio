@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
     LEAVE: "/session/leave",
     GET: "/session", // Base path, append roomId
     LIST: "/session/list",
+    TOKEN: "/session/token",
   },
   // ZEGO token generation moved to frontend - no backend endpoint needed
 };
@@ -29,6 +30,7 @@ export const ROUTES = {
   DASHBOARD: "/dashboard",
   HOST: "/host",
   JOIN: "/join",
+  CALL: "/call/:roomId",
 };
 
 export const ZEGO_CONFIG = {

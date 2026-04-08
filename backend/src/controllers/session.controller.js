@@ -1,5 +1,6 @@
 const Session = require("../models/session.model");
 const User = require("../models/user.model");
+const { generateToken } = require("../utils/livekit.util.js");
 
 const listSession = async (req, res, next) => {
   try {
@@ -10,9 +11,9 @@ const listSession = async (req, res, next) => {
 
     const session = await Session.find({
       $and: [
-        status,
+        ...statusFilter,
         {
-          $or: [{ host: userId }, { "participants.userId": "userId" }],
+          $or: [{ host: userId }, { "participants.userId": userId }],
         },
       ],
     }).sort({ createdAt: -1 });
@@ -31,7 +32,7 @@ const listSession = async (req, res, next) => {
     res.json({
       success: true,
       data: {
-        session: true,
+        sessions: result,
       },
     });
   } catch (err) {
@@ -73,7 +74,7 @@ const createSession = async (req, res, next) => {
       roomId,
       host: userId,
       hostName: user.name,
-      participants: [{ userId, userName: user.name }],
+      participants: [{ userId, username: user.name }],
     });
 
     res.status(201).json({
@@ -149,7 +150,7 @@ const joinSession = async (req, res, next) => {
       });
     }
 
-    session.participants.push({ userId, userName });
+    session.participants.push({ userId, username: user.name });
     await session.save();
     res.json({
       success: true,
@@ -164,7 +165,7 @@ const joinSession = async (req, res, next) => {
       },
     });
   } catch (err) {
-    next(error);
+    next(err);
   }
 };
 
@@ -285,6 +286,36 @@ const leaveSession = async (req, res, next) => {
   }
 };
 
+const getLiveKitToken = async (req, res) => {
+  try {
+    const { roomId } = req.body;
+    const userId = req.user.userId;
+
+    const session = await Session.findOne({ roomId });
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        error: "Session not found",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    const token = await generateToken(roomId, user.name);
+
+    res.json({
+      success: true,
+      data: { token },
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: "Token generation failed",
+    });
+  }
+};
+
 module.exports = {
   listSession,
   createSession,
@@ -292,4 +323,5 @@ module.exports = {
   getSession,
   endSession,
   leaveSession,
+  getLiveKitToken,
 };

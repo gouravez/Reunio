@@ -26,7 +26,7 @@ router.post(
 router.get("/:roomId", sessionController.getSession);
 
 // POST /api/session/end
-router.post("/create", sessionController.endSession);
+router.post("/end", sessionController.endSession);
 
 // POST /api/session/:roomId
 router.post(
@@ -35,5 +35,7 @@ router.post(
   errorHandler.validationErrorHandler,
   sessionController.leaveSession,
 );
+
+router.post("/token", sessionController.getLiveKitToken);
 
 module.exports = router;
