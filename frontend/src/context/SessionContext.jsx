@@ -1,58 +1,146 @@
-import { createContext, useContext, useState } from "react";
-import { Room } from "livekit-client";
+import { createContext, useCallback, useContext, useState } from "react";
 import api from "../services/api";
 import { API_ENDPOINTS } from "../utils/constants";
 
 const SessionContext = createContext();
 
 export const SessionProvider = ({ children }) => {
-  const [room, setRoom] = useState(null);
+  const [currentSession, setCurrentSession] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const joinRoom = async (roomId) => {
+  //Create a new session
+  const createSession = useCallback(async () => {
     try {
-      const res = await api.post(API_ENDPOINTS.SESSION.TOKEN, { roomId });
-      const token = res.data.data.token;
+      setError(null);
+      setLoading(true);
+      const response = await api.post(API_ENDPOINTS.SESSION.CREATE);
+      const session = response.data.data.session;
 
-      const roomInstance = new Room();
-
-      await roomInstance.connect(import.meta.env.VITE_LIVEKIT_URL, token);
-
-      roomInstance.on("trackSubscribed", (track, publication, participant) => {
-        if (track.kind === "video") {
-          const el = track.attach();
-
-          if (participant.isLocal) {
-            document.getElementById("local-video")?.appendChild(el);
-          } else {
-            document.getElementById("remote-video")?.appendChild(el);
-          }
-        }
-      });
-
-      await roomInstance.localParticipant.enableCameraAndMicrophone();
-
-      setRoom(roomInstance);
-    } catch (err) {
-      console.error("Join Room Error:", err);
+      setCurrentSession(session);
+      return { success: true, session };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error || "Failed to create new session";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const leaveRoom = () => {
-    room?.disconnect();
-    setRoom(null);
+  //join session
+  const joinSession = useCallback(async (roomId) => {
+    try {
+      setError(null);
+      setLoading(true);
+      const response = await api.post(API_ENDPOINTS.SESSION.JOIN, { roomId });
+      const session = response.data.data.session;
 
-    const local = document.getElementById("local-video");
-    const remote = document.getElementById("remote-video");
+      setCurrentSession(session);
+      return { success: true, session };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error || "Failed to join session";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    if (local) local.innerHTML = "";
-    if (remote) remote.innerHTML = "";
+  //get session
+
+  const getSession = useCallback(async (roomId) => {
+    try {
+      setError(null);
+      setLoading(true);
+      const response = await api.get(`${API_ENDPOINTS.SESSION.GET}/${roomId}`);
+      const session = response.data.data.session;
+
+      setCurrentSession(session);
+      return { success: true, session };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error || "Failed to get session";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  //leave session
+
+  const leaveSession = useCallback(async (roomId) => {
+    try {
+      setError(null);
+      setLoading(true);
+      await api.post(API_ENDPOINTS.SESSION.LEAVE, { roomId });
+
+      setCurrentSession(null);
+      return { success: true };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error || "Failed to leave session";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  //list sessions
+
+  const listSessions = useCallback(async (status = "all") => {
+    try {
+      setError(null);
+      setLoading(true);
+      const response = await api.get("/session/list", {
+        params: { status },
+      });
+      const sessions = response.data.data.sessions;
+      return { success: true, sessions };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error || "Failed to fetch sessions";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const clearSession = useCallback(() => {
+    setCurrentSession(null);
+    setError(null);
+  }, []);
+
+  const value = {
+    currentSession,
+    loading,
+    error,
+    createSession,
+    joinSession,
+    getSession,
+    leaveSession,
+    listSessions,
+    clearSession,
+    setError,
   };
 
   return (
-    <SessionContext.Provider value={{ joinRoom, leaveRoom, room }}>
-      {children}
-    </SessionContext.Provider>
+    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
   );
 };
 
-export const useSession = () => useContext(SessionContext);
+export const useSession = () => {
+  const context = useContext(SessionContext);
+  if (!context) {
+    throw new Error("useSession must be used within a session Provider");
+  }
+
+  return context;
+};
+
+export default SessionContext;

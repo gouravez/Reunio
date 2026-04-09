@@ -1,16 +1,16 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSession } from "../context/SessionContext";
+import { useLiveKit } from "../hooks/useLiveKit";
 
 const Call = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const { joinRoom, leaveRoom } = useSession();
+  const { joinLiveKitRoom, leaveLiveKitRoom } = useLiveKit();
 
   useEffect(() => {
-    if (roomId) joinRoom(roomId);
+    if (roomId) joinLiveKitRoom(roomId);
 
-    return () => leaveRoom();
+    return () => leaveLiveKitRoom();
   }, [roomId]);
 
 
@@ -20,7 +20,7 @@ const Call = () => {
         <h2>Room: {roomId}</h2>
         <button
           onClick={() => {
-            leaveRoom();
+            leaveLiveKitRoom();
             navigate("/dashboard");
           }}
           className="bg-red-500 px-4 py-2 rounded"

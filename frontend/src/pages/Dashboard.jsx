@@ -1,33 +1,89 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useSession } from "../context/SessionContext";
 import { ROUTES } from "../utils/constants";
 
+import { CircleAlert } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+import WelcomeSection from "../components/Dashboard/WelcomeSection";
+import ActionCard from "../components/Dashboard/ActionCard";
+import SessionList from "../components/Dashboard/SessionList";
+import FeaturesGrid from "../components/Dashboard/FeaturesGrid";
+
 const Dashboard = () => {
+  const { user } = useAuth();
+  const { createSession, listSessions, error, loading } = useSession();
   const navigate = useNavigate();
+  const [creating, setCreating] = useState(false);
+  const [sessions, setSessions] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const handleCreateSession = async () => {
+    setCreating(true);
+    const result = await createSession();
+    if (result.success) {
+      navigate(`${ROUTES.HOST}?roomId=${result.session.roomId}`);
+    }
+    setCreating(false);
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      const result = await listSessions(statusFilter);
+      if (result.success) {
+        setSessions(result.sessions);
+      }
+    };
+    load();
+  }, [listSessions, statusFilter]);
+
+  const handleRejoinSession = (session) => {
+    if (session.status === "active") {
+      if (session.isHost) {
+        navigate(`${ROUTES.HOST}?roomId=${result.session.roomId}`);
+      } else {
+        navigate(`${ROUTES.JOIN}?roomId=${result.session.roomId}`);
+      }
+    }
+  };
+
+  const handleJoinSession = () => {
+    navigate(ROUTES.JOIN);
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-xl shadow-md text-center w-[400px]">
-        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
+      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <WelcomeSection username={user?.name} />
 
-        <div className="flex flex-col gap-4">
-          {/* Host Session */}
-          <button
-            onClick={() => navigate(ROUTES.HOST)}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-500 transition"
-          >
-            🎥 Start Session
-          </button>
+        {error && (
+          <div className="max-w-2xl mx-auto mb-8">
+            <div className="bg-red-50 border border-red-500 text-red-700 p-4 rounded-lg shadow-sm">
+              <div className="flex items-center">
+                <CircleAlert className="w-5 h-5 mr-2" />
+                <span>{error}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
-          {/* Join Session */}
-          <button
-            onClick={() => navigate(ROUTES.JOIN)}
-            className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 transition"
-          >
-            🔗 Join Session
-          </button>
-        </div>
-      </div>
+        <ActionCard
+          onCreateSession={handleCreateSession}
+          onJoinSession={handleJoinSession}
+          creating={creating}
+        />
+
+        <FeaturesGrid />
+
+        <SessionList
+          sessions={sessions}
+          loading={loading}
+          onRejoinSession={handleRejoinSession}
+          statusFilter={statusFilter}
+          onFilterChange={setStatusFilter}
+        />
+      </main>
     </div>
   );
 };

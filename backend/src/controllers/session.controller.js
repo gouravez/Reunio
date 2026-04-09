@@ -11,7 +11,7 @@ const listSession = async (req, res, next) => {
 
     const session = await Session.find({
       $and: [
-        ...statusFilter,
+        statusFilter,
         {
           $or: [{ host: userId }, { "participants.userId": userId }],
         },
