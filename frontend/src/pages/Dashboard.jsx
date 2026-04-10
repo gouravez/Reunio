@@ -41,9 +41,9 @@ const Dashboard = () => {
   const handleRejoinSession = (session) => {
     if (session.status === "active") {
       if (session.isHost) {
-        navigate(`${ROUTES.HOST}?roomId=${result.session.roomId}`);
+        navigate(`${ROUTES.HOST}?roomId=${session.roomId}`);
       } else {
-        navigate(`${ROUTES.JOIN}?roomId=${result.session.roomId}`);
+        navigate(`${ROUTES.JOIN}?roomId=${session.roomId}`);
       }
     }
   };

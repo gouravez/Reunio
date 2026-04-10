@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ROUTES } from "./utils/constants";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
-import Call from "./pages/Call"
+import Call from "./pages/Call";
 import Dashboard from "./pages/Dashboard";
 import JoinSession from "./pages/JoinSession";
 import HostSession from "./pages/HostSession";
@@ -12,6 +12,7 @@ import Footer from "./components/Footer";
 import { AuthProvider } from "./context/AuthContext";
 import { SessionProvider } from "./context/SessionContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { Toaster } from "react-hot-toast";
 
 function Layout({ children, showHeader = true, showFooter = true }) {
   return (
@@ -28,6 +29,23 @@ const App = () => {
     <AuthProvider>
       <SessionProvider>
         <Router>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: "#363636",
+                color: "#fff",
+              },
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: "#10b981",
+                  secondary: "#fff",
+                },
+              },
+            }}
+          />
           <div className="min-h-screen flex flex-col bg-gray-50">
             <Routes>
               <Route
