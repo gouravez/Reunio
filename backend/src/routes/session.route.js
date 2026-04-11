@@ -5,6 +5,7 @@ const sessionController = require("../controllers/session.controller");
 
 const errorHandler = require("../middlewares/errorHandler.middleware");
 const { body } = require("express-validator");
+const { Room } = require("livekit-server-sdk");
 
 router.use(authenticateUser);
 
@@ -26,7 +27,7 @@ router.post(
 router.get("/:roomId", sessionController.getSession);
 
 // POST /api/session/end
-router.post("/end", sessionController.endSession);
+router.post("/end/:sessionId", sessionController.endSession);
 
 // POST /api/session/:roomId
 router.post(

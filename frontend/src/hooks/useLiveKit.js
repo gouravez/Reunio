@@ -7,8 +7,9 @@ import { API_ENDPOINTS } from "../utils/constants";
 export const useLiveKit = () => {
   const [isJoined, setIsJoined] = useState(false);
   const [userHasJoined, setUserHasJoined] = useState(false);
-  const [error, setError] = useState(null);
+  const [liveKitError, setLiveKitError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   const containerRef = useRef(null);
   const roomRef = useRef(null);
@@ -17,6 +18,13 @@ export const useLiveKit = () => {
   const isLeavingRef = useRef(false);
 
   const { user } = useAuth();
+  const getGridClass = (count) => {
+    if (count === 1) return "grid-cols-1";
+    if (count === 2) return "grid-cols-2";
+    if (count <= 4) return "grid-cols-2";
+    if (count <= 6) return "grid-cols-3";
+    return "grid-cols-4";
+  };
 
   const joinLiveKitRoom = useCallback(
     async (roomId) => {
@@ -30,13 +38,13 @@ export const useLiveKit = () => {
 
       if (!roomId) {
         const errorMessage = "Room Id is required";
-        setError(errorMessage);
+        setLiveKitError(errorMessage);
         return { success: false, error: errorMessage };
       }
 
       isJoiningRef.current = true;
       setLoading(true);
-      setError(null);
+      setLiveKitError(null);
 
       try {
         // wait for container (same as your zego logic)
@@ -68,7 +76,18 @@ export const useLiveKit = () => {
         room.on("trackSubscribed", (track, publication, participant) => {
           if (track.kind === "video" || track.kind === "audio") {
             const el = track.attach();
-            container.appendChild(el);
+
+            if (publication.source === "screen_share") {
+              el.style.width = "100%";
+              el.style.height = "100%";
+              el.style.objectFit = "contain";
+            }
+          }
+        });
+
+        room.on("localTrackUnpublished", (publication) => {
+          if (publication.source === "screen_share") {
+            setIsScreenSharing(false);
           }
         });
 
@@ -93,10 +112,9 @@ export const useLiveKit = () => {
         console.error("Failed to join LiveKit room", error);
 
         const errorMessage =
-          error.message ||
-          "Failed to join room. Check camera/mic permissions.";
+          error.message || "Failed to join room. Check camera/mic permissions.";
 
-        setError(errorMessage);
+        setLiveKitError(errorMessage);
         setIsJoined(false);
         setUserHasJoined(false);
         joinedRoomIdRef.current = null;
@@ -107,7 +125,7 @@ export const useLiveKit = () => {
         isJoiningRef.current = false;
       }
     },
-    [user, isJoined]
+    [user, isJoined],
   );
 
   const leaveLiveKitRoom = useCallback(async () => {
@@ -134,6 +152,23 @@ export const useLiveKit = () => {
     }
   }, []);
 
+  const toggleScreenShare = useCallback(async () => {
+    if (!roomRef.current) return;
+
+    try {
+      if (!isScreenSharing) {
+        await roomRef.current.localParticipant.setScreenShareEnabled(true);
+        setIsScreenSharing(true);
+      } else {
+        await roomRef.current.localParticipant.setScreenShareEnabled(false);
+        setIsScreenSharing(false);
+      }
+    } catch (err) {
+      console.error("Screen share error", err);
+      setLiveKitError("Failed to toggle screen share");
+    }
+  }, [isScreenSharing]);
+
   // cleanup (same as your zego hook)
   useEffect(() => {
     return () => {
@@ -156,12 +191,14 @@ export const useLiveKit = () => {
     // state
     isJoined,
     userHasJoined,
-    error,
+    liveKitError,
     loading,
     containerRef,
+    isScreenSharing,
 
     // methods
     joinLiveKitRoom,
     leaveLiveKitRoom,
+    toggleScreenShare,
   };
 };

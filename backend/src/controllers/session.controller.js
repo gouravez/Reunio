@@ -32,7 +32,7 @@ const listSession = async (req, res, next) => {
     res.json({
       success: true,
       data: {
-        sessions: result,
+        sessions: result, // list stays plural
       },
     });
   } catch (err) {
@@ -52,10 +52,10 @@ const createSession = async (req, res, next) => {
       });
     }
 
-    // GENERATE ROOM ID
     let roomId;
     let attempts = 0;
     const maxAttempts = 10;
+
     do {
       roomId = Session.generateRoomId();
       const exists = await Session.roomIdExists(roomId);
@@ -66,7 +66,7 @@ const createSession = async (req, res, next) => {
     if (attempts > maxAttempts) {
       return res.status(500).json({
         success: false,
-        error: "Failed to generate unique room Id. Please try again",
+        error: "Failed to generate unique room Id",
       });
     }
 
@@ -101,17 +101,19 @@ const joinSession = async (req, res, next) => {
     const { roomId } = req.body;
     const userId = req.user.userId;
 
-    if (!roomId)
+    if (!roomId) {
       return res.status(400).json({
         success: false,
         error: "Room Id is required",
       });
+    }
 
     const session = await Session.findOne({ roomId });
+
     if (!session) {
       return res.status(400).json({
         success: false,
-        error: "Session Not Found, Please Check the Room ID",
+        error: "Session Not Found",
       });
     }
 
@@ -122,7 +124,6 @@ const joinSession = async (req, res, next) => {
       });
     }
 
-    // USER HAS ALREADY JOINED SESSION
     const alreadyJoined = session.participants.some(
       (p) => p.userId.toString() === userId.toString(),
     );
@@ -131,6 +132,39 @@ const joinSession = async (req, res, next) => {
       return res.json({
         success: true,
         data: {
+          session: {
+            id: session._id,
+            roomId: session.roomId,
+            hostName: session.hostName,
+            status: session.status,
+            isHost: session.host.toString() === userId.toString(),
+            participantCount: session.participants.length,
+            participants: session.participants,
+          },
+        },
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User Not Found",
+      });
+    }
+
+    session.participants.push({
+      userId,
+      username: user.name,
+    });
+
+    await session.save();
+
+    res.json({
+      success: true,
+      data: {
+        session: {
           id: session._id,
           roomId: session.roomId,
           hostName: session.hostName,
@@ -139,29 +173,6 @@ const joinSession = async (req, res, next) => {
           participantCount: session.participants.length,
           participants: session.participants,
         },
-      });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: "User Not Found",
-      });
-    }
-
-    session.participants.push({ userId, username: user.name });
-    await session.save();
-    res.json({
-      success: true,
-      data: {
-        id: session._id,
-        roomId: session.roomId,
-        hostName: session.hostName,
-        status: session.status,
-        isHost: session.host.toString() === userId.toString(),
-        participantCount: session.participants.length,
-        participants: session.participants,
       },
     });
   } catch (err) {
@@ -171,14 +182,15 @@ const joinSession = async (req, res, next) => {
 
 const getSession = async (req, res, next) => {
   try {
-    const { roomId } = req.body;
+    const { roomId } = req.params;
     const userId = req.user.userId;
 
     const session = await Session.findOne({ roomId });
+
     if (!session) {
       return res.status(400).json({
         success: false,
-        error: "Session Not Found, Please Check the Room ID",
+        error: "Session Not Found",
       });
     }
 
@@ -189,14 +201,16 @@ const getSession = async (req, res, next) => {
     res.json({
       success: true,
       data: {
-        id: session._id,
-        roomId: session.roomId,
-        hostName: session.hostName,
-        status: session.status,
-        isHost: session.host.toString() === userId.toString(),
-        participantCount: session.participants.length,
-        participants: session.participants,
-        isParticipant,
+        session: {
+          id: session._id,
+          roomId: session.roomId,
+          hostName: session.hostName,
+          status: session.status,
+          isHost: session.host.toString() === userId.toString(),
+          participantCount: session.participants.length,
+          participants: session.participants,
+          isParticipant,
+        },
       },
     });
   } catch (err) {
@@ -210,6 +224,7 @@ const endSession = async (req, res, next) => {
     const userId = req.user.userId;
 
     const session = await Session.findById(sessionId);
+
     if (!session) {
       return res.status(400).json({
         success: false,
@@ -217,7 +232,6 @@ const endSession = async (req, res, next) => {
       });
     }
 
-    // VERIFY IF THE PARTICULAR USER IS A HOST
     if (session.host.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
@@ -225,7 +239,6 @@ const endSession = async (req, res, next) => {
       });
     }
 
-    // ALREADY ENDED CHECK
     if (session.status === "ended") {
       return res.status(400).json({
         success: false,
@@ -240,10 +253,12 @@ const endSession = async (req, res, next) => {
     res.json({
       success: true,
       data: {
-        id: session._id,
-        roomId: session.roomId,
-        status: session.status,
-        endedAt: session.endedAt,
+        session: {
+          id: session._id,
+          roomId: session.roomId,
+          status: session.status,
+          endedAt: session.endedAt,
+        },
       },
     });
   } catch (err) {
@@ -256,13 +271,8 @@ const leaveSession = async (req, res, next) => {
     const { roomId } = req.body;
     const userId = req.user.userId;
 
-    if (!roomId)
-      return res.status(400).json({
-        success: false,
-        error: "Room Id is required",
-      });
-
     const session = await Session.findOne({ roomId });
+
     if (!session) {
       return res.status(400).json({
         success: false,
@@ -273,6 +283,7 @@ const leaveSession = async (req, res, next) => {
     session.participants = session.participants.filter(
       (p) => p.userId.toString() !== userId.toString(),
     );
+    
     await session.save();
 
     res.json({

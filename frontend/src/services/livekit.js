@@ -32,7 +32,6 @@ export const joinRoom = async (
     throw new Error("Container element is required");
   }
 
-  // 🧹 cleanup existing instance (same logic as Zego)
   if (roomInstance && !isDestroying) {
     try {
       isDestroying = true;
@@ -55,7 +54,6 @@ export const joinRoom = async (
     console.warn("Permission pre-request failed", error);
   }
 
-  // 🔐 get token from backend (IMPORTANT difference from Zego)
   let token;
   try {
     const res = await api.post(API_ENDPOINTS.SESSION.TOKEN, { roomId });
@@ -67,7 +65,6 @@ export const joinRoom = async (
     throw new Error(`Failed to get LiveKit token: ${error.message}`);
   }
 
-  // 🎥 create room
   let room;
   try {
     room = new Room();
@@ -77,29 +74,23 @@ export const joinRoom = async (
     throw new Error(`Failed to create LiveKit instance: ${error.message}`);
   }
 
-  // small delay (same as Zego)
   await new Promise((resolve) => setTimeout(resolve, 100));
 
   try {
-    // 🔌 connect
     await room.connect(import.meta.env.VITE_LIVEKIT_URL, token);
 
-    // ✅ joined
     userHasJoined = true;
     if (onJoinCallback) onJoinCallback();
 
-    // 🎥 handle tracks
     room.on("trackSubscribed", (track, publication, participant) => {
       const el = track.attach();
       container.appendChild(el);
     });
 
-    // 🎤 enable media
     if (hasPermission) {
       await room.localParticipant.enableCameraAndMicrophone();
     }
 
-    // 🎥 attach local tracks
     room.localParticipant.videoTrackPublications.forEach((pub) => {
       const track = pub.track;
       if (track) {
@@ -108,7 +99,6 @@ export const joinRoom = async (
       }
     });
 
-    // 🔌 disconnect handler
     room.on("disconnected", () => {
       userHasJoined = false;
       if (onLeaveCallback) onLeaveCallback();

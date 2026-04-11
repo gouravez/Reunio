@@ -17,7 +17,8 @@ import ParticipantsList from "../components/Session/ParticipantsList";
 const HostSession = () => {
   const [sessionInfo, setSessionInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const [copiedRoomId, setCopiedRoomId] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const { currentSession, getSession, clearSession } = useSession();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const HostSession = () => {
     containerRef,
     joinLiveKitRoom,
     leaveLiveKitRoom,
+    toggleScreenShare,
   } = useLiveKit();
 
   const handleFullScreen = () => {
@@ -67,6 +69,7 @@ const HostSession = () => {
       } else {
         navigate(ROUTES.DASHBOARD);
       }
+      setIsLoading(false);
     };
 
     loadSession();
@@ -100,8 +103,6 @@ const HostSession = () => {
         retryTimeout = setTimeout(joinLiveKit, 200);
       }
 
-      joinLiveKit();
-
       return () => {
         isMounted = false;
         if (retryTimeout) {
@@ -114,6 +115,7 @@ const HostSession = () => {
         }
       };
     };
+    joinLiveKit();
   }, [sessionInfo, roomId]);
 
   // Poll participants every 5 seconds to update the list
@@ -146,8 +148,8 @@ const HostSession = () => {
     if (roomId) {
       const success = await copyToClipboard(roomId);
       if (success) {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        setCopiedRoomId(true);
+        setTimeout(() => setCopiedRoomId(false), 2000);
       }
     }
   };
@@ -161,8 +163,8 @@ const HostSession = () => {
     const link = getShareableLink();
     const success = await copyToClipboard(link);
     if (success) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
     }
   };
 
@@ -175,7 +177,7 @@ const HostSession = () => {
         liveKitJoinedRef.current = false;
       }
 
-      await api.post(`${API_ENDPOINTS.SESSION.END}/${sessionInfo.roomId}`);
+      await api.post(`${API_ENDPOINTS.SESSION.END}/${sessionInfo.id}`);
       clearSession();
       toast.success("Session ended successfully");
       navigate(ROUTES.DASHBOARD);
@@ -222,13 +224,15 @@ const HostSession = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
-      <SessionHeader title={APP_CONFIG.SESSION_CONTENT.HEADER.HOSTING_TITLE} />
-      roomId={roomId}
-      username = {user?.name}
-      onBack={handleBack}
-      showEndButton={sessionInfo.isHost}
-      onEndSession={handleEndSession}
-      <main className="mx-auto px-4 sm:px-6 lg:px-8">
+      <SessionHeader
+        title={APP_CONFIG.SESSION_CONTENT.HEADER.HOSTING_TITLE}
+        roomId={roomId}
+        username={user?.name}
+        onBack={handleBack}
+        showEndButton={sessionInfo.isHost}
+        onEndSession={handleEndSession}
+      />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 m-4">
         <div className="grid grid-cols-1 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <SessionInfoCard
@@ -236,7 +240,8 @@ const HostSession = () => {
               shareableLink={getShareableLink()}
               status={sessionInfo.status}
               participantCount={sessionInfo.participantCount}
-              copied={copied}
+              copiedRoomId={copiedRoomId}
+              copiedLink={copiedLink}
               onCopyRoomId={handleCopyRoomId}
               onCopyLink={handleCopyLink}
             />
@@ -254,6 +259,7 @@ const HostSession = () => {
                   ? APP_CONFIG.SESSION_CONTENT.VIDEO.END_BUTTON
                   : APP_CONFIG.SESSION_CONTENT.VIDEO.LEAVE_BUTTON
               }
+              onToggleScreenShare={toggleScreenShare}
             />
           </div>
 

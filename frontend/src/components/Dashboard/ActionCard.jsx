@@ -1,6 +1,7 @@
 import React from "react";
 import { Plus, User } from "lucide-react";
 import { APP_CONFIG } from "../../utils/constants";
+import {Loader} from "lucide-react";
 
 const ActionCard = ({ onCreateSession, onJoinSession, creating }) => {
   return (
