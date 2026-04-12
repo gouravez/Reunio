@@ -29,11 +29,12 @@ const HostSession = () => {
   const {
     isJoined,
     userHasJoined,
-    error,
     loading,
     containerRef,
+    participants,
     joinLiveKitRoom,
     leaveLiveKitRoom,
+    liveKitError,
     toggleScreenShare,
   } = useLiveKit();
 
@@ -156,7 +157,7 @@ const HostSession = () => {
 
   const getShareableLink = () => {
     const baseUrl = window.location.origin;
-    return `${baseUrl}/${ROUTES.JOIN}?roomId=${roomId}`;
+    return `${baseUrl}${ROUTES.JOIN}?roomId=${roomId}`;
   };
 
   const handleCopyLink = async () => {
@@ -250,8 +251,9 @@ const HostSession = () => {
               containerRef={containerRef}
               isJoined={isJoined}
               userHasJoined={userHasJoined}
-              livekitError={error}
+              livekitError={liveKitError}
               livekitLoading={loading}
+              participants={participants}
               onFullScreen={handleFullScreen}
               onLeave={handleLeave}
               leaveButtonText={

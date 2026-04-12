@@ -76,18 +76,18 @@ const JoinSession = () => {
   };
 
   useEffect(() => {
-    if (!sessionJoined || !roomId || livekitJoinRef.current) {
+    if (!sessionJoined || !roomId || livekitJoinRef.current === true) {
       return;
     }
 
     const joinLiveKit = async () => {
       if (containerRef.current) {
-        livekitJoinRef.current = true;
         const LiveKitResult = await joinLiveKitRoom(roomId);
 
-        if (!LiveKitResult.success) {
+        if (LiveKitResult.success) {
+          livekitJoinRef.current = true;
+        } else {
           console.error("failed to join LiveKit room ", LiveKitResult.error);
-          livekitJoinRef.current = false;
         }
       } else {
         setTimeout(joinLiveKit, 200);
@@ -102,7 +102,7 @@ const JoinSession = () => {
         livekitJoinRef.current = false;
       }
     };
-  }, [sessionJoined, roomId, joinLiveKitRoom, leaveLiveKitRoom]);
+  }, [sessionJoined, roomId]);
 
   useEffect(() => {
     if (!sessionJoined || roomId) return;

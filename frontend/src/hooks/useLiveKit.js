@@ -8,8 +8,9 @@ export const useLiveKit = () => {
   const [isJoined, setIsJoined] = useState(false);
   const [userHasJoined, setUserHasJoined] = useState(false);
   const [liveKitError, setLiveKitError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [liveKitLoading, setliveKitLoading] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [participants, setParticipants] = useState([]);
 
   const containerRef = useRef(null);
   const roomRef = useRef(null);
@@ -18,12 +19,15 @@ export const useLiveKit = () => {
   const isLeavingRef = useRef(false);
 
   const { user } = useAuth();
-  const getGridClass = (count) => {
-    if (count === 1) return "grid-cols-1";
-    if (count === 2) return "grid-cols-2";
-    if (count <= 4) return "grid-cols-2";
-    if (count <= 6) return "grid-cols-3";
-    return "grid-cols-4";
+
+  const addParticipant = (newParticipant) => {
+    setParticipants((prev) => {
+      const exists = prev.some(
+        (p) => p.id === newParticipant.id && p.track === newParticipant.track,
+      );
+      if (exists) return prev;
+      return [...prev, newParticipant];
+    });
   };
 
   const joinLiveKitRoom = useCallback(
@@ -43,63 +47,84 @@ export const useLiveKit = () => {
       }
 
       isJoiningRef.current = true;
-      setLoading(true);
+      setliveKitLoading(true);
       setLiveKitError(null);
 
       try {
-        // wait for container (same as your zego logic)
-        let retries = 0;
-        const maxRetries = 30;
-
-        while (!containerRef.current && retries < maxRetries) {
-          await new Promise((res) => setTimeout(res, 100));
-          retries++;
-        }
-
-        if (!containerRef.current) {
-          throw new Error("Video container not ready. Refresh page.");
-        }
-
-        const container = containerRef.current;
-
-        // get token from backend
         const res = await api.post(API_ENDPOINTS.SESSION.TOKEN, { roomId });
         const token = res.data.data.token;
 
         const room = new Room();
         roomRef.current = room;
 
-        // connect
         await room.connect(import.meta.env.VITE_LIVEKIT_URL, token);
 
-        // handle remote tracks
-        room.on("trackSubscribed", (track, publication, participant) => {
-          if (track.kind === "video" || track.kind === "audio") {
-            const el = track.attach();
+        await room.localParticipant.enableCameraAndMicrophone();
 
-            if (publication.source === "screen_share") {
-              el.style.width = "100%";
-              el.style.height = "100%";
-              el.style.objectFit = "contain";
+        const localPubs = room.localParticipant?.videoTrackPublications;
+        if (localPubs) {
+          localPubs.forEach((pub) => {
+            if (pub.track) {
+              addParticipant({
+                id: room.localParticipant.identity,
+                track: pub.track,
+                isScreen: false,
+              });
             }
+
+            pub.on("subscribed", (track) => {
+              addParticipant({
+                id: room.localParticipant.identity,
+                track,
+                isScreen: false,
+              });
+            });
+          });
+        }
+
+        if (room.participants) {
+          room.participants.forEach((participant) => {
+            room.on("trackSubscribed", (track, publication, participant) => {
+              if (track.kind === "video") {
+                addParticipant({
+                  id: participant.identity,
+                  track,
+                  isScreen: publication.source === "screen_share",
+                });
+              }
+            });
+          });
+        }
+
+        room.on("participantConnected", (participant) => {
+          participant.on("trackSubscribed", (track, publication) => {
+            if (track.kind === "video") {
+              addParticipant({
+                id: participant.identity,
+                track,
+                isScreen: publication.source === "screen_share",
+              });
+            }
+          });
+        });
+
+        room.on("trackSubscribed", (track, publication, participant) => {
+          if (track.kind === "video") {
+            addParticipant({
+              id: participant.identity,
+              track,
+              isScreen: publication.source === "screen_share",
+            });
           }
+        });
+
+        room.on("trackUnsubscribed", (track) => {
+          setParticipants((prev) => prev.filter((p) => p.track !== track));
         });
 
         room.on("localTrackUnpublished", (publication) => {
           if (publication.source === "screen_share") {
             setIsScreenSharing(false);
-          }
-        });
-
-        // enable local media
-        await room.localParticipant.enableCameraAndMicrophone();
-
-        // attach local tracks
-        room.localParticipant.videoTrackPublications.forEach((pub) => {
-          const track = pub.track;
-          if (track) {
-            const el = track.attach();
-            container.appendChild(el);
           }
         });
 
@@ -121,7 +146,7 @@ export const useLiveKit = () => {
 
         return { success: false, error: errorMessage };
       } finally {
-        setLoading(false);
+        setliveKitLoading(false);
         isJoiningRef.current = false;
       }
     },
@@ -136,11 +161,7 @@ export const useLiveKit = () => {
     try {
       roomRef.current.disconnect();
 
-      // clean DOM
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-      }
-
+      setParticipants([]);
       setIsJoined(false);
       setUserHasJoined(false);
       joinedRoomIdRef.current = null;
@@ -169,7 +190,6 @@ export const useLiveKit = () => {
     }
   }, [isScreenSharing]);
 
-  // cleanup (same as your zego hook)
   useEffect(() => {
     return () => {
       if (roomRef.current && !isLeavingRef.current) {
@@ -188,15 +208,13 @@ export const useLiveKit = () => {
   }, []);
 
   return {
-    // state
     isJoined,
     userHasJoined,
     liveKitError,
-    loading,
+    liveKitLoading,
     containerRef,
     isScreenSharing,
-
-    // methods
+    participants,
     joinLiveKitRoom,
     leaveLiveKitRoom,
     toggleScreenShare,
