@@ -228,5 +228,6 @@ export const useLiveKit = () => {
     joinLiveKitRoom,
     leaveLiveKitRoom,
     toggleScreenShare,
+    localIdentity: roomRef.current?.localParticipant?.identity,
   };
 };

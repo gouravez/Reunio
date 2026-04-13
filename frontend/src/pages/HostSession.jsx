@@ -36,6 +36,7 @@ const HostSession = () => {
     leaveLiveKitRoom,
     liveKitError,
     toggleScreenShare,
+    localIdentity,
   } = useLiveKit();
 
   const handleFullScreen = () => {
@@ -262,6 +263,7 @@ const HostSession = () => {
                   : APP_CONFIG.SESSION_CONTENT.VIDEO.LEAVE_BUTTON
               }
               onToggleScreenShare={toggleScreenShare}
+              localIdentity={localIdentity}
             />
           </div>
 

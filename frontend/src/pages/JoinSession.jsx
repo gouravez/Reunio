@@ -29,6 +29,8 @@ const JoinSession = () => {
     containerRef,
     joinLiveKitRoom,
     leaveLiveKitRoom,
+    toggleScreenShare,
+    localIdentity,
   } = useLiveKit();
 
   const handleFullScreen = () => {
@@ -155,9 +157,11 @@ const JoinSession = () => {
                 liveKitError={liveKitError}
                 livekitLoading={liveKitLoading}
                 participants={participants}
-                onFullscreen={handleFullScreen}
+                onFullScreen={handleFullScreen}
                 onLeave={handleLeave}
                 leaveButtonText={APP_CONFIG.SESSION_CONTENT.VIDEO.LEAVE_BUTTON}
+                onToggleScreenShare={toggleScreenShare}
+                localIdentity={localIdentity}
               />
             </div>
 
