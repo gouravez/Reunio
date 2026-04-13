@@ -25,6 +25,7 @@ const JoinSession = () => {
     userHasJoined,
     liveKitError,
     liveKitLoading,
+    participants,
     containerRef,
     joinLiveKitRoom,
     leaveLiveKitRoom,
@@ -153,6 +154,7 @@ const JoinSession = () => {
                 userHasJoined={userHasJoined}
                 liveKitError={liveKitError}
                 livekitLoading={liveKitLoading}
+                participants={participants}
                 onFullscreen={handleFullScreen}
                 onLeave={handleLeave}
                 leaveButtonText={APP_CONFIG.SESSION_CONTENT.VIDEO.LEAVE_BUTTON}
