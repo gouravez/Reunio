@@ -30,6 +30,38 @@ export const useLiveKit = () => {
     });
   };
 
+  const seedExistingParticipants = (room) => {
+    room.remoteParticipants.forEach((participant) => {
+      participant.videoTrackPublications.forEach((publication) => {
+        if (publication.isSubscribed && publication.track) {
+          addParticipant({
+            id: participant.identity,
+            track: publication.track,
+            isScreen: publication.source === "screen_share",
+          });
+        }
+
+        publication.on("subscribed", (track) => {
+          addParticipant({
+            id: participant.identity,
+            track,
+            isScreen: publication.source === "screen_share",
+          });
+        });
+      });
+
+      participant.on("trackSubscribed", (track, publication) => {
+        if (track.kind === "video") {
+          addParticipant({
+            id: participant.identity,
+            track,
+            isScreen: publication.source === "screen_share",
+          });
+        }
+      });
+    });
+  };
+
   const joinLiveKitRoom = useCallback(
     async (roomId) => {
       if (joinedRoomIdRef.current === roomId && isJoined) {
@@ -82,19 +114,7 @@ export const useLiveKit = () => {
           });
         }
 
-        if (room.participants) {
-          room.participants.forEach((participant) => {
-            room.on("trackSubscribed", (track, publication, participant) => {
-              if (track.kind === "video") {
-                addParticipant({
-                  id: participant.identity,
-                  track,
-                  isScreen: publication.source === "screen_share",
-                });
-              }
-            });
-          });
-        }
+        seedExistingParticipants(room);
 
         room.on("participantConnected", (participant) => {
           participant.on("trackSubscribed", (track, publication) => {
@@ -106,16 +126,6 @@ export const useLiveKit = () => {
               });
             }
           });
-        });
-
-        room.on("trackSubscribed", (track, publication, participant) => {
-          if (track.kind === "video") {
-            addParticipant({
-              id: participant.identity,
-              track,
-              isScreen: publication.source === "screen_share",
-            });
-          }
         });
 
         room.on("trackUnsubscribed", (track) => {
