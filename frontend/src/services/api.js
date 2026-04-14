@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://reunio.onrender.com",
+  baseURL: "https://reunio.onrender.com/api",
   withCredentials: true, // Include cookies in requests
   headers: {
     "Content-Type": "application/json",
