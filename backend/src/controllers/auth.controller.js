@@ -12,7 +12,7 @@ async function registerUser(req, res, next) {
         .json({ success: false, message: "User already exists" });
     }
 
-    // console.log("Registering user:", req.body); 
+    // console.log("Registering user:", req.body);
     const encryptedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       name,
@@ -21,7 +21,11 @@ async function registerUser(req, res, next) {
     });
 
     const token = generateToken(user._id);
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
 
     return res.status(201).json({
       success: true,
@@ -55,7 +59,11 @@ async function loginUser(req, res, next) {
     }
 
     const token = generateToken(user._id);
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
     return res.status(200).json({
       success: true,
       message: "User logged in successfully",
@@ -95,7 +103,11 @@ async function getCurrentUser(req, res, next) {
 
 function logoutUser(req, res, next) {
   try {
-    res.clearCookie("token");
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
     return res.status(200).json({
       success: true,
       message: "User logged out successfully",
