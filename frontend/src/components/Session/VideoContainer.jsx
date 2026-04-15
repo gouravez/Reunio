@@ -1,5 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Monitor, MonitorOff, PhoneOff, Maximize2, Users, Pin, MoreHorizontal } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Mic,
+  MicOff,
+  Monitor,
+  MonitorOff,
+  PhoneOff,
+  Maximize2,
+  Users,
+  Pin,
+  MoreHorizontal,
+} from "lucide-react";
 import { APP_CONFIG } from "../../utils/constants";
 
 const getGridLayout = (count) => {
@@ -12,12 +22,15 @@ const getGridLayout = (count) => {
 };
 
 const COLORS = [
-  "bg-blue-600", "bg-purple-600", "bg-green-600",
-  "bg-rose-600", "bg-amber-600", "bg-teal-600",
+  "bg-blue-600",
+  "bg-purple-600",
+  "bg-green-600",
+  "bg-rose-600",
+  "bg-amber-600",
+  "bg-teal-600",
 ];
 
-const getInitials = (id = "") =>
-  id.slice(0, 2).toUpperCase();
+const getInitials = (id = "") => id.slice(0, 2).toUpperCase();
 
 const VideoTile = ({ participant, index, isPinned, onPin, isLocal }) => {
   const ref = useRef(null);
@@ -51,17 +64,20 @@ const VideoTile = ({ participant, index, isPinned, onPin, isLocal }) => {
       />
 
       {/* Avatar fallback (shown when no video) */}
-      <div className={`absolute inset-0 flex items-center justify-center ${avatarColor} text-white text-3xl font-semibold opacity-0 peer-empty:opacity-100`}>
+      <div
+        className={`absolute inset-0 flex items-center justify-center ${avatarColor} text-white text-3xl font-semibold opacity-0 peer-empty:opacity-100`}
+      >
         {getInitials(id)}
       </div>
 
       {/* Name tag */}
       <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-md">
-        {isMuted
-          ? <MicOff className="w-3 h-3 text-red-400" />
-          : <Mic className="w-3 h-3 text-green-400" />
-        }
-        <span className="max-w-[120px] truncate">
+        {isMuted ? (
+          <MicOff className="w-3 h-3 text-red-400" />
+        ) : (
+          <Mic className="w-3 h-3 text-green-400" />
+        )}
+        <span className="max-w-30 truncate">
           {isLocal ? `${id} (You)` : id}
         </span>
         {isScreen && (
@@ -113,7 +129,7 @@ const VideoContainer = ({
     setPinnedParticipant((prev) =>
       prev?.id === participant.id && prev?.isScreen === participant.isScreen
         ? null
-        : participant
+        : participant,
     );
   };
 
@@ -121,7 +137,11 @@ const VideoContainer = ({
     ? [
         pinnedParticipant,
         ...participants.filter(
-          (p) => !(p.id === pinnedParticipant.id && p.isScreen === pinnedParticipant.isScreen)
+          (p) =>
+            !(
+              p.id === pinnedParticipant.id &&
+              p.isScreen === pinnedParticipant.isScreen
+            ),
         ),
       ]
     : participants;
@@ -129,12 +149,13 @@ const VideoContainer = ({
   const hasPinned = !!pinnedParticipant;
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 rounded-2xl overflow-hidden select-none">
-
+    <div className="flex h-auto flex-col bg-gray-900 rounded-2xl overflow-hidden select-none">
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-gray-900/90 backdrop-blur-sm border-b border-white/10">
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isJoined ? "bg-green-400 animate-pulse" : "bg-gray-500"}`} />
+          <div
+            className={`w-2 h-2 rounded-full ${isJoined ? "bg-green-400 animate-pulse" : "bg-gray-500"}`}
+          />
           <span className="text-white text-sm font-medium">
             {isJoined ? "Live" : "Waiting..."}
           </span>
@@ -166,14 +187,13 @@ const VideoContainer = ({
       {/* Error banner */}
       {livekitError && (
         <div className="px-4 py-2 bg-red-500/20 border-b border-red-500/30 text-red-300 text-sm flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+          <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
           {livekitError}
         </div>
       )}
 
       {/* Main area */}
       <div className="flex flex-1 overflow-hidden" ref={containerRef}>
-
         {/* Video grid */}
         <div className="flex-1 p-2 overflow-hidden">
           {participants.length === 0 ? (
@@ -182,7 +202,9 @@ const VideoContainer = ({
                 <Users className="w-7 h-7" />
               </div>
               <p className="text-sm">
-                {livekitLoading ? "Connecting..." : "Waiting for participants to join"}
+                {livekitLoading
+                  ? "Connecting..."
+                  : "Waiting for participants to join"}
               </p>
             </div>
           ) : hasPinned ? (
@@ -199,7 +221,10 @@ const VideoContainer = ({
               </div>
               <div className="w-36 flex flex-col gap-2 overflow-y-auto">
                 {orderedParticipants.slice(1).map((p, i) => (
-                  <div key={p.id + (p.isScreen ? "-s" : "") + i} className="h-24 flex-shrink-0">
+                  <div
+                    key={p.id + (p.isScreen ? "-s" : "") + i}
+                    className="h-24 shrink-0"
+                  >
                     <VideoTile
                       participant={p}
                       index={i + 1}
@@ -213,7 +238,9 @@ const VideoContainer = ({
             </div>
           ) : (
             /* Grid layout */
-            <div className={`grid gap-2 h-full ${getGridLayout(participants.length)}`}>
+            <div
+              className={`grid gap-2 h-full ${getGridLayout(participants.length)}`}
+            >
               {orderedParticipants.map((p, i) => (
                 <VideoTile
                   key={p.id + (p.isScreen ? "-s" : "") + i}
@@ -240,14 +267,16 @@ const VideoContainer = ({
                   key={p.id + i}
                   className="flex items-center gap-2 px-3 py-2 hover:bg-white/5"
                 >
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium ${COLORS[i % COLORS.length]}`}>
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium ${COLORS[i % COLORS.length]}`}
+                  >
                     {getInitials(p.id)}
                   </div>
                   <span className="text-white text-xs truncate flex-1">
                     {p.id === localIdentity ? `${p.id} (You)` : p.id}
                   </span>
                   {p.isScreen && (
-                    <Monitor className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                    <Monitor className="w-3 h-3 text-blue-400 shrink-0" />
                   )}
                 </div>
               ))}
@@ -259,7 +288,6 @@ const VideoContainer = ({
       {/* Bottom controls */}
       {isJoined && (
         <div className="flex items-center justify-center gap-3 px-4 py-3 bg-gray-900/90 backdrop-blur-sm border-t border-white/10">
-
           <button
             onClick={onToggleScreenShare}
             className={`flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl text-xs font-medium transition ${
@@ -268,10 +296,11 @@ const VideoContainer = ({
                 : "bg-white/10 text-gray-300 hover:bg-white/20"
             }`}
           >
-            {isScreenSharing
-              ? <MonitorOff className="w-5 h-5" />
-              : <Monitor className="w-5 h-5" />
-            }
+            {isScreenSharing ? (
+              <MonitorOff className="w-5 h-5" />
+            ) : (
+              <Monitor className="w-5 h-5" />
+            )}
             {isScreenSharing ? "Stop Share" : "Share Screen"}
           </button>
 
