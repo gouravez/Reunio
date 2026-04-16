@@ -4,6 +4,9 @@ import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import { API_ENDPOINTS } from "../utils/constants";
 
+import { startAudioStream } from "../services/captions";
+import { socket } from "../services/socket";
+
 export const useLiveKit = () => {
   const [isJoined, setIsJoined] = useState(false);
   const [userHasJoined, setUserHasJoined] = useState(false);
@@ -18,19 +21,40 @@ export const useLiveKit = () => {
   const isJoiningRef = useRef(false);
   const isLeavingRef = useRef(false);
 
+  const activeAudioStreams = useRef(new Map());
+
   const { user } = useAuth();
 
   const addParticipant = (newParticipant) => {
     setParticipants((prev) => {
       const exists = prev.some(
-        (p) => p.id === newParticipant.id && p.track === newParticipant.track,
+        (p) => p.id === newParticipant.id && p.track === newParticipant.track
       );
       if (exists) return prev;
       return [...prev, newParticipant];
     });
   };
 
-  const seedExistingParticipants = (room) => {
+  const handleAudioTrack = (track, participant, roomId) => {
+    console.log("🎧 Audio track detected:", participant.identity);
+
+    try {
+      const mediaStream = new MediaStream([track.mediaStreamTrack]);
+
+      const stop = startAudioStream(
+        mediaStream,
+        participant.identity,
+        socket,
+        roomId
+      );
+
+      activeAudioStreams.current.set(track.sid, stop);
+    } catch (err) {
+      console.error("Audio track error", err);
+    }
+  };
+
+  const seedExistingParticipants = (room, roomId) => {
     room.remoteParticipants.forEach((participant) => {
       participant.videoTrackPublications.forEach((publication) => {
         if (publication.isSubscribed && publication.track) {
@@ -50,6 +74,16 @@ export const useLiveKit = () => {
         });
       });
 
+      participant.audioTrackPublications.forEach((pub) => {
+        if (pub.track) {
+          handleAudioTrack(pub.track, participant, roomId);
+        }
+
+        pub.on("subscribed", (track) => {
+          handleAudioTrack(track, participant, roomId);
+        });
+      });
+
       participant.on("trackSubscribed", (track, publication) => {
         if (track.kind === "video") {
           addParticipant({
@@ -57,6 +91,10 @@ export const useLiveKit = () => {
             track,
             isScreen: publication.source === "screen_share",
           });
+        }
+
+        if (track.kind === "audio") {
+          handleAudioTrack(track, participant, roomId);
         }
       });
     });
@@ -86,35 +124,46 @@ export const useLiveKit = () => {
         const res = await api.post(API_ENDPOINTS.SESSION.TOKEN, { roomId });
         const token = res.data.data.token;
 
-        const room = new Room();
+        const room = new Room({
+          autoSubscribe: true, 
+        });
+
         roomRef.current = room;
 
         await room.connect(import.meta.env.VITE_LIVEKIT_URL, token);
 
         await room.localParticipant.enableCameraAndMicrophone();
 
-        const localPubs = room.localParticipant?.videoTrackPublications;
-        if (localPubs) {
-          localPubs.forEach((pub) => {
-            if (pub.track) {
-              addParticipant({
-                id: room.localParticipant.identity,
-                track: pub.track,
-                isScreen: false,
-              });
-            }
+        // 🎥 LOCAL VIDEO
+        room.localParticipant.videoTrackPublications.forEach((pub) => {
+          if (pub.track) {
+            addParticipant({
+              id: room.localParticipant.identity,
+              track: pub.track,
+              isScreen: false,
+            });
+          }
 
-            pub.on("subscribed", (track) => {
-              addParticipant({
-                id: room.localParticipant.identity,
-                track,
-                isScreen: false,
-              });
+          pub.on("subscribed", (track) => {
+            addParticipant({
+              id: room.localParticipant.identity,
+              track,
+              isScreen: false,
             });
           });
-        }
+        });
 
-        seedExistingParticipants(room);
+        room.localParticipant.audioTrackPublications.forEach((pub) => {
+          if (pub.track) {
+            handleAudioTrack(pub.track, room.localParticipant, roomId);
+          }
+
+          pub.on("subscribed", (track) => {
+            handleAudioTrack(track, room.localParticipant, roomId);
+          });
+        });
+
+        seedExistingParticipants(room, roomId);
 
         room.on("participantConnected", (participant) => {
           participant.on("trackSubscribed", (track, publication) => {
@@ -125,17 +174,32 @@ export const useLiveKit = () => {
                 isScreen: publication.source === "screen_share",
               });
             }
+
+            if (track.kind === "audio") {
+              handleAudioTrack(track, participant, roomId);
+            }
           });
         });
 
         room.on("trackUnsubscribed", (track) => {
           setParticipants((prev) => prev.filter((p) => p.track !== track));
+
+          const stop = activeAudioStreams.current.get(track.sid);
+          if (stop) {
+            stop();
+            activeAudioStreams.current.delete(track.sid);
+          }
         });
 
         room.on("localTrackUnpublished", (publication) => {
           if (publication.source === "screen_share") {
             setIsScreenSharing(false);
           }
+        });
+
+        room.on("disconnected", () => {
+          activeAudioStreams.current.forEach((stop) => stop());
+          activeAudioStreams.current.clear();
         });
 
         setIsJoined(true);
@@ -160,7 +224,7 @@ export const useLiveKit = () => {
         isJoiningRef.current = false;
       }
     },
-    [user, isJoined],
+    [user, isJoined]
   );
 
   const leaveLiveKitRoom = useCallback(async () => {
@@ -170,6 +234,9 @@ export const useLiveKit = () => {
 
     try {
       roomRef.current.disconnect();
+
+      activeAudioStreams.current.forEach((stop) => stop());
+      activeAudioStreams.current.clear();
 
       setParticipants([]);
       setIsJoined(false);
@@ -208,6 +275,9 @@ export const useLiveKit = () => {
         } catch (error) {
           console.error("Cleanup error", error);
         }
+
+        activeAudioStreams.current.forEach((stop) => stop());
+        activeAudioStreams.current.clear();
 
         roomRef.current = null;
         joinedRoomIdRef.current = null;

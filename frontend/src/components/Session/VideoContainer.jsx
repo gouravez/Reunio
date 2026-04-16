@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { APP_CONFIG } from "../../utils/constants";
 
+import { useCaptions } from "../../hooks/useCaptions";
 const getGridLayout = (count) => {
   if (count === 1) return "grid-cols-1 grid-rows-1";
   if (count === 2) return "grid-cols-2 grid-rows-1";
@@ -124,6 +125,8 @@ const VideoContainer = ({
 }) => {
   const [pinnedParticipant, setPinnedParticipant] = useState(null);
   const [showParticipantList, setShowParticipantList] = useState(false);
+
+  const captions = useCaptions();
 
   const handlePin = (participant) => {
     setPinnedParticipant((prev) =>
@@ -255,6 +258,17 @@ const VideoContainer = ({
           )}
         </div>
 
+        <div className="fixed bottom-20 sm:bottom-4 left-1/2 -translate-x-1/2 max-w-[90%] sm:max-w-md bg-black/70 text-white px-4 py-2 rounded-lg">
+          {captions.slice(-2).map((c, i) => (
+            <p key={i} className="text-sm leading-snug break-words">
+              <span className="text-blue-400 font-medium">
+                {typeof c === "string" ? "User" : c.userId}:
+              </span>{" "}
+              {typeof c === "string" ? c : c.text}
+            </p>
+          ))}
+        </div>
+        
         {/* Participant sidebar */}
         {showParticipantList && (
           <div className="w-48 border-l border-white/10 bg-gray-900 flex flex-col overflow-hidden">
