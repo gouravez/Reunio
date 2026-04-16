@@ -28,7 +28,7 @@ export const useLiveKit = () => {
   const addParticipant = (newParticipant) => {
     setParticipants((prev) => {
       const exists = prev.some(
-        (p) => p.id === newParticipant.id && p.track === newParticipant.track
+        (p) => p.id === newParticipant.id && p.track === newParticipant.track,
       );
       if (exists) return prev;
       return [...prev, newParticipant];
@@ -45,7 +45,7 @@ export const useLiveKit = () => {
         mediaStream,
         participant.identity,
         socket,
-        roomId
+        roomId,
       );
 
       activeAudioStreams.current.set(track.sid, stop);
@@ -102,6 +102,7 @@ export const useLiveKit = () => {
 
   const joinLiveKitRoom = useCallback(
     async (roomId) => {
+      socket.emit("join-room", { roomId });
       if (joinedRoomIdRef.current === roomId && isJoined) {
         return { success: true };
       }
@@ -125,7 +126,7 @@ export const useLiveKit = () => {
         const token = res.data.data.token;
 
         const room = new Room({
-          autoSubscribe: true, 
+          autoSubscribe: true,
         });
 
         roomRef.current = room;
@@ -224,7 +225,7 @@ export const useLiveKit = () => {
         isJoiningRef.current = false;
       }
     },
-    [user, isJoined]
+    [user, isJoined],
   );
 
   const leaveLiveKitRoom = useCallback(async () => {

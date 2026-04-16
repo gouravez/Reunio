@@ -258,17 +258,24 @@ const VideoContainer = ({
           )}
         </div>
 
-        <div className="fixed bottom-20 sm:bottom-4 left-1/2 -translate-x-1/2 max-w-[90%] sm:max-w-md bg-black/70 text-white px-4 py-2 rounded-lg">
+        <div className="fixed bottom-20 sm:bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-md space-y-1">
           {captions.slice(-2).map((c, i) => (
-            <p key={i} className="text-sm leading-snug break-words">
-              <span className="text-blue-400 font-medium">
-                {typeof c === "string" ? "User" : c.userId}:
-              </span>{" "}
-              {typeof c === "string" ? c : c.text}
-            </p>
+            <div
+              key={i}
+              className={`px-3 py-2 rounded-lg backdrop-blur-md text-sm transition ${
+                c.final
+                  ? "bg-black/70 text-white"
+                  : "bg-black/40 text-gray-300 italic"
+              }`}
+            >
+              <span className="text-blue-400 font-medium mr-1">
+                {c.userId}:
+              </span>
+              {c.text}
+            </div>
           ))}
         </div>
-        
+
         {/* Participant sidebar */}
         {showParticipantList && (
           <div className="w-48 border-l border-white/10 bg-gray-900 flex flex-col overflow-hidden">

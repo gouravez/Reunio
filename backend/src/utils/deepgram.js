@@ -2,7 +2,7 @@
 
 const { createClient, LiveTranscriptionEvents } = require("@deepgram/sdk");
 
-const createDeepgramConnection = (socket, userId, roomId) => {
+const createDeepgramConnection = (io, userId, roomId) => {
   const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
 
   const dgConnection = deepgram.listen.live({
@@ -29,7 +29,7 @@ const createDeepgramConnection = (socket, userId, roomId) => {
 
         if (!text || text.trim().length === 0) return;
 
-        socket.emit("caption", {
+        io.to(roomId).emit("caption", {
           userId,
           roomId,
           text,
