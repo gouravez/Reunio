@@ -12,6 +12,7 @@ const sessionRouter = require("./routes/session.route");
 const allowedOrigins = [
   "http://localhost:5173",
   "https://reunio-live.vercel.app",
+  "https://reunio-three.vercel.app"
 ];
 
 app.use(
